@@ -46,8 +46,18 @@ export default {
       default: 'div',
     },
   },
+  provide() {
+    const val = {}
+
+    Object.defineProperties(val, {
+      dropdownId: { get: () => this.id },
+    })
+
+    return val
+  },
   data() {
     return {
+      id: null,
       visible: false,
       instance: null,
       isEmpty: false,
@@ -75,12 +85,17 @@ export default {
       this.toggle(false)
     },
     clickAway: function (e) {
-      if (!this.$el.contains(e.target)) this.toggle()
+      if (
+        !this.$refs.target.contains(e.target) &&
+        !e.target.closest(`[data-dropdown-context="${this.id}"]`)
+      )
+        this.toggle()
     },
     setIsEmpty() {
       this.isEmpty = !Boolean(this.$refs.observer.children.length)
     },
     init() {
+      this.id = new Date().getTime().toString()
       this.visible = true
       this.$emit('visible')
       setTimeout(() => {
@@ -100,6 +115,7 @@ export default {
     },
     destroy() {
       if (!this.instance) return
+      this.id = null
       this.instance.destroy()
       this.instance = null
       this.visible = false

@@ -85,11 +85,14 @@ export default {
       this.toggle(false)
     },
     clickAway: function (e) {
-      if (
-        !this.$refs.target.contains(e.target) &&
-        !e.target.closest(`[data-dropdown-context="${this.id}"]`)
-      )
-        this.toggle()
+      const isWithin =
+        this.$el.contains(e.target) ||
+        (this.$refs.target && this.$refs.target.contains(e.target)) ||
+        e.target.closest(`[data-dropdown-context="${this.id}"]`)
+
+      if (isWithin) return
+
+      this.toggle()
     },
     setIsEmpty() {
       this.isEmpty = !Boolean(this.$refs.observer.children.length)
@@ -98,8 +101,10 @@ export default {
       this.id = new Date().getTime().toString()
       this.visible = true
       this.$emit('visible')
-      setTimeout(() => {
-        if (!this.$refs.element || !this.$refs.target) return (this.visible = false)
+
+      if (!this.$refs.element || !this.$refs.target) return (this.visible = false)
+
+      this.$nextTick(() => {
         this.instance = createPopper(this.$refs.element, this.$refs.target, {
           placement: this.placement,
           modifiers: [
@@ -111,7 +116,7 @@ export default {
             },
           ],
         })
-      }, 0)
+      })
     },
     destroy() {
       if (!this.instance) return
@@ -136,7 +141,6 @@ export default {
     this.observer = new MutationObserver(() => {
       this.setIsEmpty()
     })
-
     this.$nextTick(() => {
       this.setIsEmpty()
       this.observer.observe(this.$refs.observer, { childList: true })
